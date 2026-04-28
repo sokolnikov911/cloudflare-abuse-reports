@@ -1,0 +1,14 @@
+/vendor/
+/node_modules/
+/.idea/
+/.vscode/
+/.claude/
+
+composer.lock
+package-lock.json
+
+.phpunit.cache/
+.phpunit.result.cache
+coverage/
+coverage.xml
+.php-cs-fixer.cache

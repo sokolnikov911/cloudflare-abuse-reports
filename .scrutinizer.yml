@@ -1,0 +1,33 @@
+build:
+    nodes:
+        tests:
+            environment:
+                matrix:
+                    - php: '8.1'
+                    - php: '8.2'
+                    - php: '8.3'
+                    - php: '8.4'
+                    - php: '8.5'
+
+            dependencies:
+                before:
+                    - composer install --prefer-dist --no-progress
+
+            tests:
+                override:
+                    - command: vendor/bin/phpunit --coverage-clover=coverage.xml
+                      coverage:
+                          file: coverage.xml
+                          format: clover
+                    - vendor/bin/phpstan analyse --no-progress
+                    - vendor/bin/phpcs
+
+checks:
+    php:
+        code_rating: true
+        duplication: true
+
+filter:
+    excluded_paths:
+        - vendor/*
+        - tests/*

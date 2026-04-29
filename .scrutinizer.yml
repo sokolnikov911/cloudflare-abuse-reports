@@ -8,7 +8,7 @@ build:
                     - composer install --prefer-dist --no-progress
             tests:
                 override:
-                    - command: vendor/bin/phpunit --coverage-clover=coverage.xml
+                    - command: XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-clover=coverage.xml
                       coverage:
                           file: coverage.xml
                           format: clover

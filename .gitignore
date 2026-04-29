@@ -5,7 +5,6 @@
 /.claude/
 
 composer.lock
-package-lock.json
 
 .phpunit.cache/
 .phpunit.result.cache

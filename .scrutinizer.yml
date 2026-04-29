@@ -1,24 +1,65 @@
 build:
     nodes:
-        tests:
+        php81:
             environment:
-                matrix:
-                    - php: '8.1'
-                    - php: '8.2'
-                    - php: '8.3'
-                    - php: '8.4'
-                    - php: '8.5'
-
+                php: '8.1'
             dependencies:
                 before:
                     - composer install --prefer-dist --no-progress
-
             tests:
                 override:
                     - command: vendor/bin/phpunit --coverage-clover=coverage.xml
                       coverage:
                           file: coverage.xml
                           format: clover
+                    - vendor/bin/phpstan analyse --no-progress
+                    - vendor/bin/phpcs
+
+        php82:
+            environment:
+                php: '8.2'
+            dependencies:
+                before:
+                    - composer install --prefer-dist --no-progress
+            tests:
+                override:
+                    - vendor/bin/phpunit
+                    - vendor/bin/phpstan analyse --no-progress
+                    - vendor/bin/phpcs
+
+        php83:
+            environment:
+                php: '8.3'
+            dependencies:
+                before:
+                    - composer install --prefer-dist --no-progress
+            tests:
+                override:
+                    - vendor/bin/phpunit
+                    - vendor/bin/phpstan analyse --no-progress
+                    - vendor/bin/phpcs
+
+        php84:
+            environment:
+                php: '8.4'
+            dependencies:
+                before:
+                    - composer install --prefer-dist --no-progress
+            tests:
+                override:
+                    - vendor/bin/phpunit
+                    - vendor/bin/phpstan analyse --no-progress
+                    - vendor/bin/phpcs
+
+        php85:
+            environment:
+                php: '8.5'
+            dependencies:
+                before:
+                    - composer install --prefer-dist --no-progress
+            tests:
+                override:
+                    - vendor/bin/phpunit
                     - vendor/bin/phpstan analyse --no-progress
                     - vendor/bin/phpcs
 

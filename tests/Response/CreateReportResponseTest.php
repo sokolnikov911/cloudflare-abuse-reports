@@ -40,4 +40,24 @@ class CreateReportResponseTest extends TestCase
 
         $this->assertNull($response->request);
     }
+
+    public function testFromArrayMapsResult(): void
+    {
+        $response = CreateReportResponse::fromArray([
+            'abuse_rand' => 'r1',
+            'result'     => 'Successfully submitted, you should receive an email confirmation.',
+        ]);
+
+        $this->assertSame(
+            'Successfully submitted, you should receive an email confirmation.',
+            $response->result,
+        );
+    }
+
+    public function testFromArrayResultIsNullWhenAbsent(): void
+    {
+        $response = CreateReportResponse::fromArray(['abuse_rand' => 'r1']);
+
+        $this->assertNull($response->result);
+    }
 }

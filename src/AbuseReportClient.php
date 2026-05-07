@@ -129,7 +129,17 @@ class AbuseReportClient
             throw new ApiException('Failed to decode API response: ' . json_last_error_msg(), $response->statusCode);
         }
 
-        if ($response->statusCode >= 400 || (isset($data['success']) && $data['success'] === false)) {
+        // Abuse-reports endpoints can reject a submission with a flat error
+        // body (e.g. err_code=dedupe). Pass it through so callers can map it
+        // to a domain-specific exception (e.g. DuplicateReportException).
+        $isAbuseReportFlatError = is_array($data)
+            && (($data['result'] ?? null) === 'error')
+            && isset($data['err_code']);
+
+        if (!$isAbuseReportFlatError
+            && ($response->statusCode >= 400
+                || (isset($data['success']) && $data['success'] === false))
+        ) {
             $message = $data['errors'][0]['message'] ?? 'API request failed';
             throw new ApiException($message, $response->statusCode, $data['errors'] ?? null);
         }

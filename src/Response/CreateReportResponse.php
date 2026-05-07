@@ -10,6 +10,8 @@ class CreateReportResponse
         public readonly string $abuseRand,
         public readonly ?array $request = null,
         public readonly ?string $result = null,
+        public readonly ?string $msg = null,
+        public readonly ?string $err_code = null
     ) {
     }
 
@@ -19,6 +21,8 @@ class CreateReportResponse
             abuseRand: $data['abuse_rand'] ?? '',
             request: $data['request'] ?? null,
             result: $data['result'] ?? null,
+            msg: $data['msg'] ?? null,
+            err_code: $data['err_code'] ?? null,
         );
     }
 }

@@ -6,6 +6,7 @@ namespace CloudflareAbuse\Tests;
 
 use CloudflareAbuse\AbuseReportClient;
 use CloudflareAbuse\Exception\ApiException;
+use CloudflareAbuse\Exception\DuplicateReportException;
 use CloudflareAbuse\HttpTransport\HttpResponse;
 use CloudflareAbuse\HttpTransport\HttpTransportInterface;
 use CloudflareAbuse\ListReportsParams;
@@ -52,8 +53,8 @@ class AbuseReportClientTest extends TestCase
                 $this->isType('string'),
             )
             ->willReturn(new HttpResponse(200, json_encode([
-                'success' => true,
-                'result'  => ['abuse_rand' => 'rand-xyz'],
+                'success'    => true,
+                'abuse_rand' => 'rand-xyz',
             ], JSON_THROW_ON_ERROR)));
 
         $client = new AbuseReportClient(self::TOKEN, $mock);
@@ -75,11 +76,50 @@ class AbuseReportClientTest extends TestCase
                 $this->callback(fn($body) => str_contains($body, '"act":"abuse_phishing"')),
             )
             ->willReturn(new HttpResponse(200, json_encode([
-                'success' => true,
-                'result'  => ['abuse_rand' => 'r1'],
+                'success'    => true,
+                'abuse_rand' => 'r1',
             ], JSON_THROW_ON_ERROR)));
 
         (new AbuseReportClient(self::TOKEN, $mock))->submitReport(self::ACCOUNT, $this->phishingRequest());
+    }
+
+    public function testSubmitReportThrowsDuplicateReportExceptionOnDedupe(): void
+    {
+        $mock = $this->transport(200, [
+            'request'  => ['act' => 'abuse_dmca'],
+            'result'   => 'error',
+            'msg'      => 'You have already submitted this URL recently: https://w20.my-cima.net/watch.php?vid=a162c0f11',
+            'err_code' => 'dedupe',
+        ]);
+
+        $client = new AbuseReportClient(self::TOKEN, $mock);
+
+        try {
+            $client->submitReport(self::ACCOUNT, $this->phishingRequest());
+            $this->fail('Expected DuplicateReportException was not thrown');
+        } catch (DuplicateReportException $e) {
+            $this->assertStringContainsString('already submitted', $e->getMessage());
+            $this->assertSame(
+                'https://w20.my-cima.net/watch.php?vid=a162c0f11',
+                $e->getDuplicateUrl(),
+            );
+        }
+    }
+
+    public function testSubmitReportThrowsApiExceptionOnGenericError(): void
+    {
+        $mock = $this->transport(200, [
+            'result'   => 'error',
+            'msg'      => 'Something went wrong',
+            'err_code' => 'unknown',
+        ]);
+
+        $client = new AbuseReportClient(self::TOKEN, $mock);
+
+        $this->expectException(ApiException::class);
+        $this->expectExceptionMessage('Something went wrong');
+
+        $client->submitReport(self::ACCOUNT, $this->phishingRequest());
     }
 
     // --- getReport ---

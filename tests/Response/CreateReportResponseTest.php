@@ -60,4 +60,27 @@ class CreateReportResponseTest extends TestCase
 
         $this->assertNull($response->result);
     }
+
+    public function testFromArrayMapsMsgAndErrCode(): void
+    {
+        $response = CreateReportResponse::fromArray([
+            'result'   => 'error',
+            'msg'      => 'You have already submitted this URL recently: https://example.com/foo',
+            'err_code' => 'dedupe',
+        ]);
+
+        $this->assertSame(
+            'You have already submitted this URL recently: https://example.com/foo',
+            $response->msg,
+        );
+        $this->assertSame('dedupe', $response->err_code);
+    }
+
+    public function testFromArrayMsgAndErrCodeAreNullWhenAbsent(): void
+    {
+        $response = CreateReportResponse::fromArray(['abuse_rand' => 'r1']);
+
+        $this->assertNull($response->msg);
+        $this->assertNull($response->err_code);
+    }
 }

@@ -106,6 +106,23 @@ class AbuseReportClientTest extends TestCase
         }
     }
 
+    public function testSubmitReportThrowsDuplicateReportExceptionEvenOn4xx(): void
+    {
+        // Same flat-error body, but the HTTP status is 4xx — the request()
+        // pipeline must not pre-empt it with a generic ApiException.
+        $mock = $this->transport(409, [
+            'result'   => 'error',
+            'msg'      => 'You have already submitted this URL recently: https://example.com/x',
+            'err_code' => 'dedupe',
+        ]);
+
+        $client = new AbuseReportClient(self::TOKEN, $mock);
+
+        $this->expectException(DuplicateReportException::class);
+
+        $client->submitReport(self::ACCOUNT, $this->phishingRequest());
+    }
+
     public function testSubmitReportThrowsApiExceptionOnGenericError(): void
     {
         $mock = $this->transport(200, [

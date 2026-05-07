@@ -136,7 +136,8 @@ class AbuseReportClient
             && (($data['result'] ?? null) === 'error')
             && isset($data['err_code']);
 
-        if (!$isAbuseReportFlatError
+        if (
+            !$isAbuseReportFlatError
             && ($response->statusCode >= 400
                 || (isset($data['success']) && $data['success'] === false))
         ) {

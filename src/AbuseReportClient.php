@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace CloudflareAbuse;
 
 use CloudflareAbuse\Exception\ApiException;
+use CloudflareAbuse\Exception\DuplicateReportException;
 use CloudflareAbuse\HttpTransport\CurlHttpTransport;
 use CloudflareAbuse\HttpTransport\HttpTransportInterface;
 use CloudflareAbuse\Request\CreateReportRequest;
@@ -24,14 +25,30 @@ class AbuseReportClient
     }
 
     /**
-     * @throws ApiException
+     * @throws DuplicateReportException When Cloudflare rejects the report as a duplicate (err_code=dedupe).
+     * @throws ApiException             For any other API-level failure.
      */
     public function submitReport(string $accountId, CreateReportRequest $request): CreateReportResponse
     {
         $type = $request->getType()->value;
         $data = $this->post("/accounts/{$accountId}/abuse-reports/{$type}", $request->toArray());
 
-        return CreateReportResponse::fromArray($data['result'] ?? $data);
+        $response = CreateReportResponse::fromArray($data);
+
+        if ($response->result === 'error') {
+            $message = $response->msg ?? 'Abuse report submission failed';
+
+            if ($response->err_code === 'dedupe') {
+                throw new DuplicateReportException(
+                    $message,
+                    DuplicateReportException::extractUrlFromMessage($response->msg),
+                );
+            }
+
+            throw new ApiException($message, 200);
+        }
+
+        return $response;
     }
 
     /**

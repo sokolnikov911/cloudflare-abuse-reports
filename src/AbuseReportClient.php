@@ -6,6 +6,7 @@ namespace CloudflareAbuse;
 
 use CloudflareAbuse\Exception\ApiException;
 use CloudflareAbuse\Exception\DuplicateReportException;
+use CloudflareAbuse\Exception\NotCloudflareDomainException;
 use CloudflareAbuse\HttpTransport\CurlHttpTransport;
 use CloudflareAbuse\HttpTransport\HttpTransportInterface;
 use CloudflareAbuse\Request\CreateReportRequest;
@@ -42,6 +43,11 @@ class AbuseReportClient
                 throw new DuplicateReportException(
                     $message,
                     DuplicateReportException::extractUrlFromMessage($response->msg),
+                );
+            } elseif ($response->err_code === 'url_not_orange') {
+                throw new NotCloudflareDomainException(
+                    $message,
+                    NotCloudflareDomainException::extractDomainFromMessage($response->msg),
                 );
             }
 
